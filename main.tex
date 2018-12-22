@@ -1,0 +1,89 @@
+\documentclass[a4paper]{article}
+
+\usepackage{fullpage} % Package to use full page
+\usepackage{parskip} % Package to tweak paragraph skipping
+\usepackage{tikz} % Package for drawing
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\title{Understanding the derivative of the softmax loss function}
+\author{Tang Xin}
+\date{October 8, 2018}
+
+\begin{document}
+
+\maketitle
+
+\section{Qustion}
+
+There are $n$ inputs, $\{o_1, o_2, ..., o_n\}$ for a node, the $i$th output is $\Hat{y}_i$ and the Equation is as follow:
+\begin{equation}
+\label{eq:softmax}
+\Hat{y}_i = \frac{e^{o_i}}{\sum_{k=1}^{n}{e^{o_k}}} = \frac{e^{o_i}}{\sum_{k}{e^{o_k}}}, i = 1, 2, ...,n
+\end{equation}
+However, the true output is $(y_1, y_2,...,y_n)$. Then, we use the cross-entropy loss function to measure the error, so we have:
+\begin{equation}
+\label{eq:loss}
+l = -\sum_{j}{y_j\log{\Hat{y}_j}}
+\end{equation}
+How to compute the derivative of the error $l$ with respect to the inputs $\{o_1,o_2,...,o_n\}$.
+
+First, we compute the derivative of $\Hat{y}_j$ with respect to $o_i$.
+
+If $j\ne i$, then we have,
+\begin{equation}
+\begin{split}
+ \frac{\partial \Hat{y}_j}{\partial o_i} &=   \partial\frac{\frac{e^{o_j}}{\sum_{k\ne i}{e^{o_k}}+e^{o_i}}}{\partial o_i}     \\
+ &= -\frac{e^{o_j}e^{o_i}}{{\sum_{k\ne i}{e^{o_k}}+e^{o_i}}^2}\\  
+ & = -\frac{e^{o_j}}{\sum_{k}{e^{o_k}}}\frac{e^{o_i}}{\sum_{k}{e^{o_k}}} \\
+ & =-\hat{y}_j\hat{y}_i \\
+\end{split}
+\end{equation}
+
+If $j=i$, we have
+\begin{equation}
+\begin{split}
+ \frac{\partial \Hat{y}_i}{\partial o_i} &=   \partial\frac{\frac{e^{o_i}}{\sum_{k\ne i}{e^{o_k}}+e^{o_i}}}{\partial o_i}     \\
+ &= \frac{e^{o_i}\sum_{k}{e^{o_k}}-e^{o_i}e^{o_i}}{{{\sum_{k}{e^{o_k}}}^2}}\\  
+ &= \frac{e^{o_i}}{\sum_{k}{e^{o_k}}}\frac{\sum_{k}{e^{o_k}}-e^{o_i}}{\sum_{k}{e^{o_k}}} \\
+ & = \hat{y}_i(1-\hat{y}_i) \\
+\end{split}
+\end{equation}
+  
+On the other hand, we should compute the derivative of the error $l$ with respect to $\hat{y}_j$, so we get,
+\begin{equation}
+\begin{split}
+\frac{\partial l}{\partial o_i} &= \frac{-\sum_{j}{y_j\log{\Hat{y}_j}}}{o_i} =-\sum_j{y_j \frac{\partial {\log{\hat{y}_j}}}{\partial o_i}}     \\
+&=-y_i \frac{\partial \log{\hat{y}_i}}{\partial o_i} - \sum_{j\neq i}{y_j \frac{\partial log{\hat{y}_j}}{o_i}} \\
+& = -y_i (\frac{1}{\hat{y}_i})(\hat{y}_i(1-\hat{y}_i)) - \sum_{j\neq i}{y_j(\frac{1}{\hat{y}_j})(-\hat{y}_i\hat{y}_j))} \\
+&=-y_i(1-\hat{y}_i)+\sum_{j\neq i}{y_j\hat{y}_i} \\
+&=-y_i + y_i\hat{y}_i + \sum_{j\neq i}{y_j\hat{y}_i} \\
+&=\sum_j{y_j\hat{y}_i} - y_i \\
+\end{split}    
+\end{equation}
+
+As we know, $\sum_j{y_j}=1$, so we get
+\begin{equation}
+\label{eq:partial}
+\frac{\partial l}{\partial o_i} = \hat{y}_i - y_i    
+\end{equation}
+Hence, let $o=(o_1,o_2,...,o_n)$, we have
+\begin{equation}
+\begin{split}
+\frac{\partial l}{\partial o} &= (\hat{y}_1 - y_1,\hat{y}_1=2 - y_2,...,\hat{y}_n - y_n) \\    
+&= (\hat{y}_1,\hat{y}_2,...,\hat{y}_n)-(y_1,y_2,...,y_n) \\    
+&=\hat{y}-y \\
+\end{split}
+\end{equation}
+
+We should note that, Equation \ref{eq:partial} is just for one sample. If we have many samples, we should sum them up. It means, for $N$ samples, we have
+\begin{equation}
+\begin{split}
+\frac{\partial l}{\partial o} = \sum_{i=1}^{N}\{\hat{y}^i - y^i\} 
+\end{split}
+\end{equation}
+While, $\hat{y}^i$ and $y^i$ are vectors.
+
+\bibliographystyle{plain}
+\bibliography{bibliography.bib}
+\end{document}
